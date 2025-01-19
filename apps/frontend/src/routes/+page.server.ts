@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
-import { shortenUrl } from '$lib/api';
+import { api } from '$lib/api';
 import { urlSchema } from '$lib/schemas';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -20,7 +20,7 @@ export const actions = {
 		}
 
 		try {
-			const shortUrl = await shortenUrl(form.data.url);
+			const shortUrl = await api.shorten(form.data.url);
 			form.message = 'URL shortened successfully';
 			return { form, shortUrl };
 		} catch (error) {

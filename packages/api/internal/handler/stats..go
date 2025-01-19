@@ -2,33 +2,54 @@ package handler
 
 import (
 	"database/sql"
-	"fmt"
+	"encoding/json"
 	"net/http"
+	"time"
 )
 
 func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.URL.Path[len("/stats/"):]
 
 	if shortURL == "" {
-		http.Error(w, "Short URL is required", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Short URL is required",
+		})
 		return
 	}
 
 	data, err := h.store.GetURLStats(shortURL)
 	if err == sql.ErrNoRows {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "URL not found",
+		})
 		return
 	}
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Database error",
+		})
 		return
 	}
 
-	fmt.Fprintf(w, "Stats for %s:\n", shortURL)
-	fmt.Fprintf(w, "Original URL: %s\n", data.LongURL)
-	fmt.Fprintf(w, "Created: %v\n", data.CreatedAt)
-	fmt.Fprintf(w, "Visits: %d\n", data.Visits)
+	var lastVisit *string
 	if data.LastVisit.Valid {
-		fmt.Fprintf(w, "Last Visited: %v\n", data.LastVisit.Time)
+		lastVisitStr := data.LastVisit.Time.Format(time.RFC3339)
+		lastVisit = &lastVisitStr
 	}
+
+	response := StatsResponse{
+		LongUrl:   data.LongURL,
+		CreatedAt: data.CreatedAt.Format(time.RFC3339),
+		Visits:    data.Visits,
+		LastVisit: lastVisit,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

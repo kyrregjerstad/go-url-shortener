@@ -5,9 +5,22 @@ interface ShortenResponse {
 }
 
 interface StatsResponse {
-	visits: number;
+	longUrl: string;
 	createdAt: string;
-	originalUrl: string;
+	visits: number;
+	lastVisit?: string;
+}
+
+interface Visit {
+	timestamp: string;
+	userAgent: string;
+	ipAddress: string;
+	referer?: string;
+}
+
+interface AnalyticsResponse {
+	short_code: string;
+	visits: Visit[];
 }
 
 export class ApiError extends Error {
@@ -19,29 +32,67 @@ export class ApiError extends Error {
 	}
 }
 
-export async function shortenUrl(url: string): Promise<string> {
-	const response = await fetch(`${PUBLIC_API_URL}/shorten`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({ url })
-	});
+abstract class BaseApi {
+	constructor(protected baseUrl: string = PUBLIC_API_URL) {}
 
-	if (!response.ok) {
-		throw new ApiError(response.status, 'Failed to shorten URL');
+	protected async get<T>(path: string): Promise<T> {
+		try {
+			const response = await fetch(`${this.baseUrl}${path}`);
+
+			if (!response.ok) {
+				throw new ApiError(response.status, await response.text());
+			}
+
+			console.log('response', response);
+
+			return response.json();
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			throw error;
+		}
 	}
 
-	const data: ShortenResponse = await response.json();
-	return data.shortUrl;
+	protected async post<T>(path: string, data: unknown): Promise<T> {
+		try {
+			const response = await fetch(`${this.baseUrl}${path}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(data)
+			});
+
+			if (!response.ok) {
+				throw new ApiError(response.status, await response.text());
+			}
+
+			return response.json();
+		} catch (error) {
+			console.error('Error posting data:', error);
+			throw error;
+		}
+	}
 }
 
-export async function getUrlStats(shortUrl: string): Promise<StatsResponse> {
-	const response = await fetch(`${PUBLIC_API_URL}/stats/${shortUrl}`);
-
-	if (!response.ok) {
-		throw new ApiError(response.status, 'Failed to get URL stats');
+class UrlShortenerApi extends BaseApi {
+	async shorten(url: string): Promise<string> {
+		const data = await this.post<ShortenResponse>('/shorten', { url });
+		return data.shortUrl;
 	}
 
-	return response.json();
+	async getStats(shortCode: string): Promise<StatsResponse> {
+		const stats = await this.get<StatsResponse>(`/stats/${shortCode}`);
+		console.log('stats', stats);
+		return stats;
+	}
+
+	async getAnalytics(shortCode: string): Promise<AnalyticsResponse> {
+		return this.get<AnalyticsResponse>(`/analytics/${shortCode}`);
+	}
 }
+
+// Create a singleton instance
+export const api = new UrlShortenerApi();
+
+// Export type-only interfaces for use in components
+export type { ShortenResponse, StatsResponse, Visit, AnalyticsResponse };

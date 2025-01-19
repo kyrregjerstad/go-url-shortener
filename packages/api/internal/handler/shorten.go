@@ -8,47 +8,65 @@ import (
 )
 
 func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
-	type request struct {
-		URL string `json:"url"`
-	}
-
-	var req request
+	var req ShortenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Invalid request body",
+		})
 		return
 	}
 
 	if req.URL == "" {
-		http.Error(w, "URL is required", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "URL is required",
+		})
 		return
 	}
 
 	validatedURL, err := validation.ValidateAndNormalizeURL(req.URL)
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		var message string
 		switch err {
 		case validation.ErrInvalidURL:
-			http.Error(w, "Invalid URL", http.StatusBadRequest)
+			message = "Invalid URL"
 		case validation.ErrURLNotReachable:
-			http.Error(w, "URL not reachable", http.StatusBadRequest)
+			message = "URL not reachable"
 		default:
-			http.Error(w, "Failed to validate URL", http.StatusInternalServerError)
+			message = "Failed to validate URL"
 		}
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: message,
+		})
 		return
 	}
 
 	shortCode, err := h.generateShortCode()
 	if err != nil {
-		http.Error(w, "Failed to generate short code", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Failed to generate short code",
+		})
 		return
 	}
 
 	if err := h.store.CreateURL(shortCode, validatedURL); err != nil {
-		http.Error(w, "Failed to save URL", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Failed to save URL",
+		})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"shortUrl": fmt.Sprintf("http://localhost:8080/%s", shortCode),
+	json.NewEncoder(w).Encode(ShortenResponse{
+		ShortURL: fmt.Sprintf("http://localhost:8080/%s", shortCode),
 	})
 }

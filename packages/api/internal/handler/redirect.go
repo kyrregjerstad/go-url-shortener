@@ -2,7 +2,7 @@ package handler
 
 import (
 	"database/sql"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -14,17 +14,28 @@ func (h *Handler) RedirectURL(w http.ResponseWriter, r *http.Request) {
 
 	if shortURL == "" {
 		log.Printf("Redirecting to home page")
-		fmt.Fprintf(w, "Welcome to URL shortener!")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(WelcomeResponse{
+			Message: "Welcome to URL shortener!",
+		})
 		return
 	}
 
 	longURL, err := h.store.GetAndIncrementURL(shortURL)
 	if err == sql.ErrNoRows {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "URL not found",
+		})
 		return
 	}
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Database error",
+		})
 		return
 	}
 
