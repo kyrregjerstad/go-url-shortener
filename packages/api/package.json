@@ -1,0 +1,11 @@
+{
+  "name": "@short/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "air",
+    "build": "go build -o dist/server cmd/server/main.go",
+    "start": "./dist/server",
+    "setup": "go install github.com/cosmtrek/air@latest"
+  }
+}
