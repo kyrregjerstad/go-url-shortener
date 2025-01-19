@@ -21,14 +21,20 @@ func main() {
 	defer store.Close()
 
 	handler := handler.NewHandler(store)
+	router := http.NewServeMux()
 
-	http.HandleFunc("/", handler.RedirectURL)
-	http.HandleFunc("/shorten", handler.ShortenUrl)
-	http.HandleFunc("/stats/", handler.GetStats)
-	http.HandleFunc("/analytics/", handler.GetAnalytics)
+	router.HandleFunc("GET /", handler.RedirectURL)
+	router.HandleFunc("POST /shorten", handler.ShortenUrl)
+	router.HandleFunc("GET /stats/", handler.GetStats)
+	router.HandleFunc("GET /analytics/", handler.GetAnalytics)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
 
 	fmt.Println("Server is running on port 8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

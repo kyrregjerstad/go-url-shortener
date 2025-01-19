@@ -7,10 +7,6 @@ import (
 )
 
 func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	longURL := r.FormValue("url")
 	if longURL == "" {
