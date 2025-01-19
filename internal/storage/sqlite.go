@@ -8,11 +8,20 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Store struct {
+// Storage defines the interface for URL storage operations
+type Storage interface {
+	CreateURL(shortCode, longURL string) error
+	GetAndIncrementURL(shortCode string) (string, error)
+	GetURLStats(shortCode string) (model.URLData, error)
+	Close() error
+}
+
+// SQLiteStore implements the Storage interface using SQLite
+type SQLiteStore struct {
 	db *sql.DB
 }
 
-func NewDatabase(dbPath string) (*Store, error) {
+func NewStorage(dbPath string) (Storage, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
@@ -33,20 +42,20 @@ func NewDatabase(dbPath string) (*Store, error) {
 		return nil, err
 	}
 
-	return &Store{db}, nil
+	return &SQLiteStore{db}, nil
 }
 
-func (db *Store) CreateURL(shortCode, longURL string) error {
-	_, err := db.db.Exec(`
+func (s *SQLiteStore) CreateURL(shortCode, longURL string) error {
+	_, err := s.db.Exec(`
 		INSERT INTO urls (short_code, long_url, created_at) 
 		VALUES (?, ?, ?)
 	`, shortCode, longURL, time.Now())
 	return err
 }
 
-func (db *Store) GetAndIncrementURL(shortCode string) (string, error) {
+func (s *SQLiteStore) GetAndIncrementURL(shortCode string) (string, error) {
 	var longURL string
-	err := db.db.QueryRow(`
+	err := s.db.QueryRow(`
 		UPDATE urls 
 		SET visits = visits + 1, 
 		last_visit = ? 
@@ -56,9 +65,9 @@ func (db *Store) GetAndIncrementURL(shortCode string) (string, error) {
 	return longURL, err
 }
 
-func (db *Store) GetURLStats(shortCode string) (model.URLData, error) {
+func (s *SQLiteStore) GetURLStats(shortCode string) (model.URLData, error) {
 	var url model.URLData
-	err := db.db.QueryRow(`
+	err := s.db.QueryRow(`
 		SELECT long_url, created_at, visits, last_visit 
 		FROM urls 
 		WHERE short_code = ?
@@ -66,6 +75,6 @@ func (db *Store) GetURLStats(shortCode string) (model.URLData, error) {
 	return url, err
 }
 
-func (s *Store) Close() error {
+func (s *SQLiteStore) Close() error {
 	return s.db.Close()
 }

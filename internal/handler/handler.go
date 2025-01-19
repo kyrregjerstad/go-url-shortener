@@ -7,15 +7,14 @@ import (
 )
 
 type Handler struct {
-	db *storage.Store
+	store storage.Storage
 }
 
-func NewHandler(db *storage.Store) *Handler {
-	return &Handler{db: db}
+func NewHandler(store storage.Storage) *Handler {
+	return &Handler{store: store}
 }
 
 func (h *Handler) generateShortCode() (string, error) {
-
 	b := make([]byte, 6)
 	_, err := rand.Read(b)
 	if err != nil {

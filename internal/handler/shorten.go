@@ -6,7 +6,6 @@ import (
 )
 
 func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -24,7 +23,7 @@ func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.db.CreateURL(shortCode, longURL); err != nil {
+	if err := h.store.CreateURL(shortCode, longURL); err != nil {
 		http.Error(w, "Failed to save URL", http.StatusInternalServerError)
 		return
 	}

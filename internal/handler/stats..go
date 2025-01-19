@@ -14,7 +14,7 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.db.GetURLStats(shortURL)
+	data, err := h.store.GetURLStats(shortURL)
 	if err == sql.ErrNoRows {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return

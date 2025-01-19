@@ -11,13 +11,13 @@ import (
 )
 
 func main() {
-	db, err := storage.NewDatabase("urls.db")
+	store, err := storage.NewStorage("urls.db")
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("Failed to connect to storage: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
-	handler := handler.NewHandler(db)
+	handler := handler.NewHandler(store)
 
 	http.HandleFunc("/", handler.RedirectURL)
 	http.HandleFunc("/shorten", handler.ShortenUrl)

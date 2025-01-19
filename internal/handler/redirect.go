@@ -14,9 +14,7 @@ func (h *Handler) RedirectURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var longURL string
-
-	longURL, err := h.db.GetAndIncrementURL(shortURL)
+	longURL, err := h.store.GetAndIncrementURL(shortURL)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "URL not found", http.StatusNotFound)
