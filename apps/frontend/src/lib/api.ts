@@ -1,3 +1,5 @@
+import { PUBLIC_API_URL } from '$env/static/public';
+
 interface ShortenResponse {
 	shortUrl: string;
 }
@@ -18,7 +20,7 @@ export class ApiError extends Error {
 }
 
 export async function shortenUrl(url: string): Promise<string> {
-	const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/shorten`, {
+	const response = await fetch(`${PUBLIC_API_URL}/shorten`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -35,7 +37,7 @@ export async function shortenUrl(url: string): Promise<string> {
 }
 
 export async function getUrlStats(shortUrl: string): Promise<StatsResponse> {
-	const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/stats/${shortUrl}`);
+	const response = await fetch(`${PUBLIC_API_URL}/stats/${shortUrl}`);
 
 	if (!response.ok) {
 		throw new ApiError(response.status, 'Failed to get URL stats');

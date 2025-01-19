@@ -1,20 +1,29 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"url-shortener/internal/validation"
 )
 
 func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		URL string `json:"url"`
+	}
 
-	longURL := r.FormValue("url")
-	if longURL == "" {
+	var req request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.URL == "" {
 		http.Error(w, "URL is required", http.StatusBadRequest)
 		return
 	}
 
-	validatedURL, err := validation.ValidateAndNormalizeURL(longURL)
+	validatedURL, err := validation.ValidateAndNormalizeURL(req.URL)
 	if err != nil {
 		switch err {
 		case validation.ErrInvalidURL:
@@ -38,5 +47,8 @@ func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Shortened URL: http://localhost:8080/%s", shortCode)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"shortUrl": fmt.Sprintf("http://localhost:8080/%s", shortCode),
+	})
 }
