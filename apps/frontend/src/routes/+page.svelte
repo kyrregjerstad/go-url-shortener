@@ -1,4 +1,6 @@
 <script lang="ts">
+	import InputCard from './InputCard.svelte';
+
 	import { superForm } from 'sveltekit-superforms';
 
 	let { data, form } = $props();
@@ -18,32 +20,11 @@
 	});
 </script>
 
-<main class="container mx-auto max-w-2xl px-4 py-8">
-	<h1 class="mb-8 text-center text-4xl font-bold">URL Shortener</h1>
+<main class="container mx-auto h-[calc(100dvh-11rem)] max-w-2xl px-4 py-8">
+	<h1 class="mb-8 text-center text-4xl font-bold">Link Shortener</h1>
 
-	<form method="POST" use:enhance class="space-y-4">
-		<div>
-			<label for="url" class="block text-sm font-medium text-gray-700">Enter URL to shorten</label>
-			<input
-				type="url"
-				id="url"
-				name="url"
-				bind:value={$formData.url}
-				required
-				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-				placeholder="https://example.com"
-			/>
-			{#if $errors.url}
-				<p class="mt-1 text-sm text-red-600">{$errors.url}</p>
-			{/if}
-		</div>
-
-		<button
-			type="submit"
-			class="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-		>
-			Shorten URL
-		</button>
+	<form method="POST" use:enhance>
+		<InputCard value={$formData.url} error={$errors.url} />
 	</form>
 
 	{#if $message}

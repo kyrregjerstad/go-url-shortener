@@ -35,15 +35,17 @@ export class ApiError extends Error {
 abstract class BaseApi {
 	constructor(protected baseUrl: string = PUBLIC_API_URL) {}
 
-	protected async get<T>(path: string): Promise<T> {
+	protected async get<T>(path: string, fetcher: typeof fetch): Promise<T> {
 		try {
-			const response = await fetch(`${this.baseUrl}${path}`);
+			const response = await fetcher(`${this.baseUrl}${path}`, {
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
 
 			if (!response.ok) {
 				throw new ApiError(response.status, await response.text());
 			}
-
-			console.log('response', response);
 
 			return response.json();
 		} catch (error) {
@@ -80,14 +82,12 @@ class UrlShortenerApi extends BaseApi {
 		return data.shortUrl;
 	}
 
-	async getStats(shortCode: string): Promise<StatsResponse> {
-		const stats = await this.get<StatsResponse>(`/stats/${shortCode}`);
-		console.log('stats', stats);
-		return stats;
+	async getStats(shortCode: string, fetcher: typeof fetch): Promise<StatsResponse> {
+		return this.get<StatsResponse>(`/stats/${shortCode}`, fetcher);
 	}
 
-	async getAnalytics(shortCode: string): Promise<AnalyticsResponse> {
-		return this.get<AnalyticsResponse>(`/analytics/${shortCode}`);
+	async getAnalytics(shortCode: string, fetcher: typeof fetch): Promise<AnalyticsResponse> {
+		return this.get<AnalyticsResponse>(`/analytics/${shortCode}`, fetcher);
 	}
 }
 
