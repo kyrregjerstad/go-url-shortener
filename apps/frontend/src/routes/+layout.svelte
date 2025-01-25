@@ -1,9 +1,11 @@
 <script lang="ts">
 	import '../app.css';
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 
 	let { children } = $props();
 </script>
 
+<Toaster />
 <div
 	class="text-foreground dark:bg-background dark:text-foreground from-background min-h-screen bg-gradient-to-r to-zinc-900"
 >

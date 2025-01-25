@@ -1,53 +1,63 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import InputCard from './InputCard.svelte';
 
 	import { superForm } from 'sveltekit-superforms';
 
 	let { data, form } = $props();
-	const {
+	let {
 		form: formData,
 		errors,
 		enhance,
-		message
+		submitting
 	} = superForm(data.form, {
 		taintedMessage: null,
 		onUpdate({ form, result }) {
+			console.log('result', result);
 			if (form.valid && result?.type === 'success') {
 				// Access the shortUrl from the result data
-				console.log('Short URL:', result.data?.shortUrl);
+
+				if (result.data?.shortUrl) {
+					copyToClipboard(result.data?.shortUrl);
+					toast.success('🚀 Link shortened and copied to clipboard!');
+				} else {
+					toast.error('🚨 Error: ' + result.data?.error);
+				}
+			}
+
+			if (form.valid && result?.type === 'failure') {
+				toast.error('🚨 Error: ' + result.data?.error);
 			}
 		}
 	});
+
+	function copyToClipboard(url: string) {
+		navigator.clipboard.writeText(url);
+	}
 </script>
 
 <main class="container mx-auto h-[calc(100dvh-11rem)] max-w-2xl px-4 py-8">
 	<h1 class="mb-8 text-center text-4xl font-bold">Link Shortener</h1>
 
 	<form method="POST" use:enhance>
-		<InputCard value={$formData.url} error={$errors.url} />
+		<InputCard value={$formData.url} error={$errors.url} isSubmitting={$submitting} />
 	</form>
 
-	{#if $message}
-		<div class="mt-4 rounded-md bg-green-100 p-4 text-green-700">
-			{$message}
-		</div>
-	{/if}
-
 	{#if form?.shortUrl}
-		<div class="mt-8 rounded-md bg-green-50 p-4">
-			<h2 class="mb-2 text-lg font-semibold">Your shortened URL:</h2>
+		<div class="border-border bg-card text-card-foreground mt-4 rounded-lg border p-4 shadow-sm">
+			<h2 class="mb-2 text-lg font-medium">Your shortened URL:</h2>
 			<div class="flex items-center gap-2">
 				<a
 					href={form.shortUrl}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="break-all text-blue-600 hover:underline"
+					class="text-primary hover:text-primary/90 break-all"
 				>
 					{form.shortUrl}
 				</a>
 				<button
-					onclick={() => navigator.clipboard.writeText(form.shortUrl)}
-					class="p-2 text-gray-500 hover:text-gray-700"
+					onclick={() => copyToClipboard(form.shortUrl)}
+					class="text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md p-2"
 					title="Copy to clipboard"
 				>
 					📋

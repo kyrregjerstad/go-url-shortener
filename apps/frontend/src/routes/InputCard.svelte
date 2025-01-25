@@ -4,7 +4,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
 
-	let { value = $bindable(), error } = $props();
+	let { value = $bindable(), error, isSubmitting } = $props();
 </script>
 
 <Card.Root
@@ -13,13 +13,15 @@
 	<div class="bg-background/90 rounded-lg">
 		<Card.Content class="space-y-1">
 			<Label for="url">Link</Label>
-			<Input type="url" id="url" name="url" bind:value required placeholder="https://example.com" />
+			<Input type="text" id="url" name="url" bind:value required placeholder="example.com" />
 		</Card.Content>
-		<Card.Footer>
+		<Card.Footer class="flex flex-col gap-2">
+			<Button type="submit" class="w-full" disabled={value.length === 0 || isSubmitting}
+				>Shorten Link</Button
+			>
 			{#if error}
 				<p class="mt-1 text-sm text-red-600">{error}</p>
 			{/if}
-			<Button type="submit" class="w-full" disabled={value.length === 0}>Shorten Link</Button>
 		</Card.Footer>
 	</div>
 </Card.Root>
