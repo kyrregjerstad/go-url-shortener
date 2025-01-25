@@ -53,5 +53,9 @@
 		"vite": "^5.4.11",
 		"vitest": "^2.1.8",
 		"zod": "^3.24.1"
+	},
+	"dependencies": {
+		"@unovis/svelte": "^1.5.0",
+		"@unovis/ts": "^1.5.0"
 	}
 }
